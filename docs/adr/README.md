@@ -22,3 +22,4 @@ UI tweaks, docs, new dashboard views over existing analytics) does not.
 | ADR | Title | Status |
 |-----|-------|--------|
 | [0001](0001-core-architecture.md) | Core architecture of the AI Observability Platform | Accepted (v1.0) |
+| [0002](0002-observation-protocol-v1.md) | Observation Protocol v1 | Accepted |
