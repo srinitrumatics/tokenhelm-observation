@@ -33,14 +33,27 @@ already implement (no new/4th validation implementation):
    `sdk/typescript/tests/conformance.test.ts` load the **same** manifest and assert their
    `validate()` agrees on every case (verdict *and* reason). They run inside the existing
    `python-sdk` / `typescript-sdk` CI gates — **no new CI job**.
-3. **`observe` CLI** — shipped as a `bin` of `@tokenhelm/observation-sdk`, reusing its `validate()`:
-   - `observe validate <log.jsonl>` — protocol-validate every line; exit 1 on any violation.
-   - `observe lint <log.jsonl>` — non-fatal warnings (attribution gaps, unpriced, missing app name).
-   - `observe stats <log.jsonl>` — attribution breakdown + **decimal-exact** (BigInt) cost/token
-     reconciliation by provider and agent.
+3. **`observe` CLI** — shipped as a `bin` of `@tokenhelm/observation-sdk`, reusing its `validate()`
+   and `normalizeRecord()` (no second implementation). Six intentionally-small, protocol-focused
+   commands; anything analytics-shaped stays in the platform:
+   - `observe validate <log>` — protocol-validate every line; exit 1 on any violation.
+   - `observe lint <log>` — non-fatal warnings (attribution gaps, unpriced, missing app name).
+   - `observe normalize <log>` — canonicalize arbitrary/legacy records → protocol-valid events.
+   - `observe stats <log>` — attribution breakdown + **decimal-exact** (BigInt) cost/token reconcile.
+   - `observe replay <log>` — deterministic canonical stream (normalize + dedupe + stable sort);
+     idempotent, embodying the immutable-events / deterministic-replay invariant.
+   - `observe diff <a> <b> --ignore <path>` — field-level diff keyed by `event_id`; makes
+     cross-SDK parity a one-liner (`observe diff py.jsonl ts.jsonl --ignore metadata.sdk`).
 4. **JSON Schema drift fix** — align `observation-event.schema.json` to the validators: `raw`
    becomes optional (`["object","null"]`, defaults `{}`); `metadata` becomes required with a
-   required boolean `priced`.
+   required boolean `priced`. Stamp `x-protocol-version` / `x-schema-version`.
+5. **Version separation** — three independently-evolvable versions, made explicit:
+   `PROTOCOL_VERSION` (contract), `SCHEMA_VERSION` (schema artifact), and the SDK package version.
+   Declared in `protocol/protocol.json` and surfaced by `observe --version`.
+6. **Certification** — `protocol/protocol.json` + `protocol/README.md` define "Observation Protocol
+   v1 Certified": an implementation that accepts every valid and rejects every invalid manifest
+   case. Because the SDK conformance suites assert exactly this, certification is continuous, not a
+   one-time audit — and a new-language SDK certifies purely by passing the shared manifest.
 
 ## Compatibility review
 
@@ -49,6 +62,11 @@ Touches the documented `ObservationEvent` **JSON Schema**, not the runtime model
 - **`v1.x` field compatibility:** preserved. No field added, repurposed, or removed. The schema
   edit makes it *describe the validators more faithfully* (`raw` was always optional in the SDKs;
   `metadata.priced` was always required by them) — it does not change any event's shape.
+- **`observe normalize`** uses the **protocol's** definitions (sha256 `prompt_hash`; sha256-based
+  `obs_…` synthetic ids for records lacking `event_id`). This intentionally differs from the
+  platform's tolerant `normalize()` (which uses FNV `ph_…` / `leg_…` ids for raw legacy ingest):
+  the CLI canonicalizes to what a *producer* would emit, before the platform sees it. Both remain
+  within v1.x — `prompt_hash` and `event_id` are opaque grouping/dedup keys, not cross-tool joins.
 - **Reconciliation gate:** unaffected — green. `observe stats` independently reproduces the
   reconciliation totals (`0.0170` / `1560`) over the SDK fixture.
 - **Replay determinism:** unaffected — the kit and CLI are read-only over events.
@@ -81,7 +99,11 @@ No `v2` concerns.
 - **`sdk/python` (CI `python-sdk`):** `test_conformance.py` runs all manifest cases (20) — every
   `valid` accepted, every `invalid` rejected with the expected substring. Python suite 22 → 42.
 - **`sdk/typescript` (CI `typescript-sdk`):** `conformance.test.ts` runs the same manifest (20);
-  `cli.test.ts` (9) covers `sumDecimals` exactness, `validateLog`, `computeStats` reconciliation
-  over the real SDK fixture (`0.0170` / `1560`), and `run()` exit codes. TS suite 24 → 53.
+  `cli.test.ts` (14) covers `sumDecimals` exactness, `validateLog`, `computeStats` reconciliation
+  over the real SDK fixture (`0.0170` / `1560`), `normalizeLog` (legacy → valid), `replayLog`
+  determinism/idempotence, `diffLogs` cross-SDK parity (only `metadata.sdk` differs), version
+  separation, and `run()` exit codes. TS suite 24 → 58.
+- **Cross-SDK parity, now executable:** `observe diff <py> <ts> --ignore metadata.sdk` reports
+  `equivalent` — the v1.2 parity claim reduced to a single CLI command.
 - Both suites consume the **identical** `protocol/conformance/manifest.json`, so a validator
   divergence fails CI in at least one language.
