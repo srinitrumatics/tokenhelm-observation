@@ -37,6 +37,10 @@ TypeScript / Node.js. Deliverables:
 The SDK boundary **is** the `ObservationEvent` spec — `cost_tracking.py` and the TS
 `normalize()` already agree on it; the SDK formalizes and packages that contract.
 
+**Status:** Python SDK shipped (`sdk/python/`, ADR 0002). TypeScript/Node SDK shipped
+(`sdk/typescript/`, ADR 0003) — protocol parity proven by `sdk-parity.test.ts`. Both run under
+CI (`python-sdk` / `typescript-sdk` gates).
+
 ### Epic 2 — Observation Protocol
 
 Extract the `ObservationEvent` schema into a versioned, language-neutral specification — the
