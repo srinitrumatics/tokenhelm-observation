@@ -101,10 +101,14 @@ producer in CI, regardless of how the events were generated. It reuses the SDK's
 it agrees with the shared conformance fixtures (`protocol/conformance/`) by construction.
 
 ```bash
-observe validate usage_log.jsonl    # protocol-validate every line; exit 1 on any violation
-observe lint usage_log.jsonl        # non-fatal warnings (attribution gaps, unpriced, …)
-observe stats usage_log.jsonl       # attribution breakdown + decimal-exact reconciliation
-observe <cmd> file.jsonl --json     # machine-readable report
+observe validate  usage_log.jsonl                       # protocol-validate every line; exit 1 on violation
+observe lint      usage_log.jsonl                       # non-fatal warnings (attribution gaps, unpriced, …)
+observe normalize raw.jsonl                             # arbitrary/legacy record → canonical event (JSONL)
+observe stats     usage_log.jsonl                       # attribution breakdown + decimal-exact reconciliation
+observe replay    usage_log.jsonl                       # deterministic canonical stream (normalize+dedupe+sort)
+observe diff      a.jsonl b.jsonl --ignore metadata.sdk # field-level diff keyed by event_id; exit 1 if they differ
+observe <cmd> file.jsonl --json                         # machine-readable report
+observe --version                                       # distinct cli / protocol / schema versions
 ```
 
 `observe stats` example (decimal-exact, no float drift):

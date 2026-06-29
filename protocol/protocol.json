@@ -1,0 +1,38 @@
+{
+  "name": "Observation Protocol",
+  "protocol_version": "1.0",
+  "schema_version": "1.0.0",
+  "description": "The language-neutral contract between ObservationEvent producers (SDKs) and consumers (the platform). This file declares the THREE independently-evolvable versions and points at the normative artifacts.",
+  "versions": {
+    "protocol_version": {
+      "value": "1.0",
+      "meaning": "The semantic contract: required/optional/derived fields, validation rules, attribution derivation. Bumps only on a contract change. Within v1.x: additive optional fields only — never repurpose or remove an existing field."
+    },
+    "schema_version": {
+      "value": "1.0.0",
+      "meaning": "Revision of the JSON Schema artifact. May advance for editorial/clarity fixes WITHOUT changing protocol_version."
+    },
+    "sdk_version": {
+      "meaning": "Each SDK package versions independently (e.g. observation-sdk 0.1.0). An SDK states which protocol_version it implements; its own version is orthogonal."
+    }
+  },
+  "compatibility": {
+    "range": ">=1.0 <2.0",
+    "policy": "Backward compatible within v1.x. Breaking the contract or a field's meaning is v2.0 and requires an ADR + migration path."
+  },
+  "artifacts": {
+    "specification": "docs/adr/0002-observation-protocol-v1.md",
+    "json_schema": "specs/002-ai-observability-platform/contracts/observation-event.schema.json",
+    "conformance_kit": "protocol/conformance/manifest.json",
+    "cli": "observe (bin of @tokenhelm/observation-sdk)"
+  },
+  "certification": {
+    "claim": "Observation Protocol v1 Certified",
+    "criterion": "An implementation is certified for protocol_version 1.0 when it accepts EVERY 'valid' case and rejects EVERY 'invalid' case in protocol/conformance/manifest.json, with each rejection's error containing the case's 'match' substring.",
+    "reference_implementation": "The Conformance Kit (protocol/conformance/) is the reference — NOT any single SDK.",
+    "certified": [
+      { "implementation": "observation-sdk (Python)", "protocol_version": "1.0", "evidence": "sdk/python/tests/test_conformance.py" },
+      { "implementation": "@tokenhelm/observation-sdk (TypeScript)", "protocol_version": "1.0", "evidence": "sdk/typescript/tests/conformance.test.ts" }
+    ]
+  }
+}

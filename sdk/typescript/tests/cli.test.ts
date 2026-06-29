@@ -5,15 +5,15 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { computeStats, lintLog, sumDecimals, validateLog } from "../src/cli/core.js";
+import { computeStats, diffLogs, lintLog, normalizeLog, replayLog, sumDecimals, validateLog } from "../src/cli/core.js";
 import { run } from "../src/cli/observe.js";
+import { validate } from "../src/index.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 // the Python-emitted fixture (real, canonical) lives under frontend/
-const PY_FIXTURE = path.resolve(
-  HERE, "..", "..", "..",
-  "frontend", "lib", "__tests__", "fixtures", "sdk-emitted-events.jsonl",
-);
+const FIX_DIR = path.resolve(HERE, "..", "..", "..", "frontend", "lib", "__tests__", "fixtures");
+const PY_FIXTURE = path.join(FIX_DIR, "sdk-emitted-events.jsonl");
+const TS_FIXTURE = path.join(FIX_DIR, "sdk-emitted-events.typescript.jsonl");
 
 const tmpDirs: string[] = [];
 function tmpFile(name: string, content: string): string {
@@ -78,6 +78,63 @@ describe("lintLog", () => {
   });
 });
 
+describe("normalizeLog", () => {
+  it("canonicalizes a legacy record into a protocol-valid event", () => {
+    // legacy: no event_id, agent only (no prompt), latency in seconds, top-level priced
+    const legacy = '{"timestamp":"2026-06-20T10:00:00+00:00","provider":"gemini","model":"m","agent":"router","input_tokens":100,"output_tokens":20,"latency":0.25,"cost":"0.0012"}';
+    const report = normalizeLog(legacy);
+    expect(report.events.length).toBe(1);
+    expect(report.skipped.length).toBe(0);
+    const e = report.events[0]!;
+    expect(() => validate(e as unknown as Record<string, unknown>)).not.toThrow();
+    expect(e.event_id.startsWith("obs_")).toBe(true); // synthetic id
+    expect(e.prompt).toBe("router"); // agent == prompt fallback
+    expect(e.latency_ms).toBe(250); // seconds → ms
+    expect(e.attribution_status).toBe("partial"); // session missing
+    expect(e.metadata.priced).toBe(true);
+  });
+
+  it("skips a record that cannot be placed (no model)", () => {
+    const report = normalizeLog('{"timestamp":"2026-06-20T10:00:00+00:00","provider":"g"}');
+    expect(report.events.length).toBe(0);
+    expect(report.skipped[0]?.error).toMatch(/model/);
+  });
+});
+
+describe("replayLog — deterministic", () => {
+  it("dedupes by event_id and sorts by (timestamp, event_id); is idempotent", () => {
+    const a = '{"event_id":"b","timestamp":"2026-06-20T10:02:00+00:00","provider":"g","model":"m","session_id":"s","agent":"a","prompt":"p","input_tokens":1,"output_tokens":1,"cost":"0.001","currency":"USD","status":"success","attribution_status":"complete","metadata":{"priced":true}}';
+    const b = '{"event_id":"a","timestamp":"2026-06-20T10:00:00+00:00","provider":"g","model":"m","session_id":"s","agent":"a","prompt":"p","input_tokens":1,"output_tokens":1,"cost":"0.001","currency":"USD","status":"success","attribution_status":"complete","metadata":{"priced":true}}';
+    const dupOfA = b; // same event_id "a"
+    const first = replayLog([a, b, dupOfA].join("\n"));
+    expect(first.events.map((e) => e.event_id)).toEqual(["a", "b"]); // sorted, deduped
+    expect(first.duplicates).toBe(1);
+
+    // idempotent: replaying its own JSONL output yields identical ids
+    const asJsonl = first.events.map((e) => JSON.stringify(e)).join("\n");
+    const second = replayLog(asJsonl);
+    expect(second.events.map((e) => e.event_id)).toEqual(first.events.map((e) => e.event_id));
+    expect(second.duplicates).toBe(0);
+  });
+});
+
+describe("diffLogs — cross-SDK parity in one command", () => {
+  it("Python vs TypeScript fixtures are equivalent modulo metadata.sdk", () => {
+    const py = readFileSync(PY_FIXTURE, "utf8");
+    const ts = readFileSync(TS_FIXTURE, "utf8");
+
+    const withoutIgnore = diffLogs(py, ts);
+    expect(withoutIgnore.equivalent).toBe(false);
+    // the ONLY field that differs across all 7 events is metadata.sdk
+    const changedPaths = new Set(withoutIgnore.changed.flatMap((c) => c.diffs.map((d) => d.path)));
+    expect([...changedPaths]).toEqual(["metadata.sdk"]);
+
+    const ignored = diffLogs(py, ts, ["metadata.sdk"]);
+    expect(ignored.equivalent).toBe(true);
+    expect(ignored.changed.length).toBe(0);
+  });
+});
+
 describe("run() exit codes", () => {
   it("returns 0 for a clean validate, 1 for an invalid log", () => {
     vi.spyOn(process.stdout, "write").mockImplementation(() => true);
@@ -88,11 +145,24 @@ describe("run() exit codes", () => {
     expect(run(["validate", bad, "--quiet"])).toBe(1);
   });
 
-  it("returns 0 for stats and lint", () => {
+  it("returns 0 for stats, lint, normalize, and replay on a clean log", () => {
     vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+    vi.spyOn(process.stderr, "write").mockImplementation(() => true);
     const f = tmpFile("log.jsonl", readFileSync(PY_FIXTURE, "utf8"));
     expect(run(["stats", f])).toBe(0);
     expect(run(["lint", f])).toBe(0);
+    expect(run(["normalize", f])).toBe(0);
+    expect(run(["replay", f])).toBe(0);
+  });
+
+  it("diff returns 0 when equivalent (with --ignore), 1 otherwise; 2 without two files", () => {
+    vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+    vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    const py = tmpFile("py.jsonl", readFileSync(PY_FIXTURE, "utf8"));
+    const ts = tmpFile("ts.jsonl", readFileSync(TS_FIXTURE, "utf8"));
+    expect(run(["diff", py, ts, "--ignore", "metadata.sdk"])).toBe(0);
+    expect(run(["diff", py, ts])).toBe(1);
+    expect(run(["diff", py])).toBe(2);
   });
 
   it("returns 2 for an unknown command or missing file argument", () => {
@@ -102,13 +172,16 @@ describe("run() exit codes", () => {
     expect(run(["validate"])).toBe(2);
   });
 
-  it("prints the version with --version", () => {
+  it("prints distinct cli/protocol/schema versions with --version", () => {
     const writes: string[] = [];
     vi.spyOn(process.stdout, "write").mockImplementation((s: string | Uint8Array) => {
       writes.push(String(s));
       return true;
     });
     expect(run(["--version"])).toBe(0);
-    expect(writes.join("")).toMatch(/\d+\.\d+\.\d+/);
+    const out = writes.join("");
+    expect(out).toMatch(/cli\/sdk:\s+\d+\.\d+\.\d+/);
+    expect(out).toMatch(/protocol:\s+\d+\.\d+/);
+    expect(out).toMatch(/schema:\s+\d+\.\d+\.\d+/);
   });
 });

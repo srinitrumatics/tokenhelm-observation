@@ -43,3 +43,14 @@ well-formed and breaks **exactly one** rule, so a rejection pins that specific r
 
 Adding a rule to the protocol means adding a fixture here **first**; both SDK suites then fail
 until their validators implement it — keeping every producer in lockstep with the spec.
+
+## Certification
+
+> **Observation Protocol v1 Certified**
+
+An implementation is certified for `protocol_version 1.0` when it **accepts every `valid` case and
+rejects every `invalid` case** in `manifest.json`, with each rejection's error containing the case's
+`match` substring. The SDK conformance suites assert exactly this, so certification is continuous
+(every CI run), not a one-time audit. A new-language SDK certifies by loading the same
+`manifest.json` and passing every case — see [`../protocol.json`](../protocol.json) for the current
+certified implementations and [`../README.md`](../README.md) for the version/compatibility policy.

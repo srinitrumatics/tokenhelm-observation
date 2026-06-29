@@ -12,9 +12,17 @@ All notable changes to the AI Observability Platform (TokenHelm Analytics).
   validator divergence is a CI failure — no new CI job (runs in the existing `python-sdk` /
   `typescript-sdk` gates). Python suite 22 → 42; TS suite 24 → 53.
 - **`observe` CLI** — shipped as the `observe` bin of `@tokenhelm/observation-sdk`, reusing the
-  SDK's `validate()`: `observe validate` (protocol-validate a JSONL log; exit 1 on violation),
-  `observe lint` (non-fatal warnings), `observe stats` (attribution breakdown + decimal-exact,
-  BigInt-based cost/token reconciliation). `--json` for machine output.
+  SDK's `validate()` / `normalizeRecord()` (no second implementation). Six protocol-focused
+  commands: `validate` (exit 1 on violation), `lint` (non-fatal warnings), `normalize`
+  (arbitrary/legacy → canonical event), `stats` (attribution breakdown + decimal-exact BigInt
+  reconciliation), `replay` (deterministic canonical stream), `diff` (field-level, keyed by
+  `event_id`, with `--ignore` — making cross-SDK parity a one-liner). `--json` for machine output.
+- **Version separation** — `PROTOCOL_VERSION` / `SCHEMA_VERSION` / SDK version are now explicit and
+  independently evolvable (`protocol/protocol.json`, schema `x-protocol-version`/`x-schema-version`,
+  `observe --version`).
+- **Certification** — `protocol/protocol.json` + `protocol/README.md` define "Observation Protocol
+  v1 Certified" (accept every valid + reject every invalid manifest case); the Python and TypeScript
+  SDKs are certified continuously by their conformance suites.
 
 ### Changed (drift fix, compatibility preserved)
 - `specs/.../contracts/observation-event.schema.json` aligned to the SDK validators: `raw`

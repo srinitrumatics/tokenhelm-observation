@@ -11,7 +11,17 @@
 
 import { createHash } from "node:crypto";
 
+/**
+ * Three independently-evolvable versions (do not conflate them):
+ *  - PROTOCOL_VERSION — the semantic contract (this file + the conformance kit). Bumps only on a
+ *    contract change; v1.x stays backward compatible (add optional fields, never repurpose/remove).
+ *  - SCHEMA_VERSION   — the revision of the JSON Schema *artifact*
+ *    (specs/.../contracts/observation-event.schema.json). Can advance for editorial/clarity fixes
+ *    within the same PROTOCOL_VERSION.
+ *  - the SDK version  — the npm package version (see package.json / `VERSION` in index.ts).
+ */
 export const PROTOCOL_VERSION = "1.0";
+export const SCHEMA_VERSION = "1.0.0";
 
 /** Sentinel used when an attribution dimension is absent (matches the platform). */
 export const UNKNOWN = "unknown";
