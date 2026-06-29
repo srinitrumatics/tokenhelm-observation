@@ -1,0 +1,26 @@
+{
+  "protocol_version": "1.0",
+  "description": "Canonical conformance cases for Observation Protocol v1. Every protocol validator (the Python SDK, the TypeScript SDK, and any future producer) MUST accept every 'valid' case and reject every 'invalid' case, with an error message containing the given 'match' substring. This is the cross-language agreement gate: the SDK test suites load THIS manifest, so a divergence between validators is a test failure, not a silent drift.",
+  "cases": [
+    { "file": "valid/minimal-complete.json", "valid": true, "note": "all required fields, complete attribution, priced" },
+    { "file": "valid/full-attribution.json", "valid": true, "note": "every optional field populated; folded thinking tokens in raw" },
+    { "file": "valid/unpriced-zero-cost.json", "valid": true, "note": "priced=false ⇒ cost '0'; tokens still counted" },
+    { "file": "valid/error-status.json", "valid": true, "note": "status='error' with zero output tokens" },
+    { "file": "valid/partial-attribution.json", "valid": true, "note": "agent+session present, prompt sentinel ⇒ partial" },
+    { "file": "valid/unattributed-missing.json", "valid": true, "note": "all attribution dims sentinel ⇒ missing; prompt_hash null" },
+    { "file": "valid/integer-cost.json", "valid": true, "note": "cost with no decimal point ('3') is a valid decimal string" },
+
+    { "file": "invalid/missing-currency.json", "valid": false, "rule": "required-field", "match": "missing required field 'currency'" },
+    { "file": "invalid/empty-provider.json", "valid": false, "rule": "non-empty-string", "match": "'provider' must be a non-empty string" },
+    { "file": "invalid/cost-as-number.json", "valid": false, "rule": "cost-decimal-string", "match": "'cost' must be a decimal string" },
+    { "file": "invalid/cost-scientific-notation.json", "valid": false, "rule": "cost-decimal-string", "match": "'cost' must be a decimal string" },
+    { "file": "invalid/negative-input-tokens.json", "valid": false, "rule": "non-negative-integer", "match": "'input_tokens' must be an integer >= 0" },
+    { "file": "invalid/negative-latency.json", "valid": false, "rule": "non-negative-latency", "match": "'latency_ms' must be a number >= 0" },
+    { "file": "invalid/priced-missing.json", "valid": false, "rule": "metadata-priced-boolean", "match": "'metadata.priced' must be a boolean" },
+    { "file": "invalid/priced-not-boolean.json", "valid": false, "rule": "metadata-priced-boolean", "match": "'metadata.priced' must be a boolean" },
+    { "file": "invalid/attribution-inconsistent.json", "valid": false, "rule": "attribution-consistency", "match": "presence implies 'complete'" },
+    { "file": "invalid/status-bad-enum.json", "valid": false, "rule": "status-enum", "match": "'status' must be one of" },
+    { "file": "invalid/attribution-bad-enum.json", "valid": false, "rule": "attribution-enum", "match": "'attribution_status' must be one of" },
+    { "file": "invalid/tags-not-strings.json", "valid": false, "rule": "tags-strings", "match": "'tags' must be a list of strings" }
+  ]
+}

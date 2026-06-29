@@ -24,3 +24,4 @@ UI tweaks, docs, new dashboard views over existing analytics) does not.
 | [0001](0001-core-architecture.md) | Core architecture of the AI Observability Platform | Accepted (v1.0) |
 | [0002](0002-observation-protocol-v1.md) | Observation Protocol v1 | Accepted |
 | [0003](0003-typescript-observation-sdk.md) | TypeScript/Node Observation SDK (protocol parity) | Accepted |
+| [0004](0004-protocol-conformance-kit.md) | Observation Protocol Conformance Kit + `observe` CLI | Accepted |
