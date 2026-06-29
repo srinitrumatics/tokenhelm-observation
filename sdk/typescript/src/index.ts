@@ -44,6 +44,10 @@ export { ObservationEmitter } from "./emitter.js";
 export { currentContext, mergeContext, runWith, DEFAULT_CONTEXT } from "./context.js";
 export type { ObservationContext } from "./context.js";
 
+// Canonicalization (consumer-side: arbitrary/legacy record → protocol-valid event)
+export { normalizeRecord, sortEvents, dedupeEvents } from "./normalize.js";
+export type { NormalizeResult } from "./normalize.js";
+
 // Transports
 export { InMemoryTransport, JsonlTransport, HttpTransport } from "./transport.js";
 export type { Transport, JsonlTransportOptions, HttpTransportOptions } from "./transport.js";
@@ -51,6 +55,7 @@ export type { Transport, JsonlTransportOptions, HttpTransportOptions } from "./t
 // Protocol
 export {
   PROTOCOL_VERSION,
+  SCHEMA_VERSION,
   UNKNOWN,
   EVENT_STATUSES,
   ATTRIBUTION_STATUSES,

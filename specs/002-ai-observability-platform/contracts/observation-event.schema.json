@@ -1,6 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://trumatics.local/contracts/observation-event.schema.json",
+  "x-protocol-version": "1.0",
+  "x-schema-version": "1.0.0",
   "title": "ObservationEvent",
   "description": "Canonical, immutable record of one model invocation — Observation Protocol v1. The single contract every producer emits and every analytics module consumes; storage sinks (JSONL, DB, etc.) serialize and yield this shape via the EventSource interface. This schema is kept in lockstep with the SDK validators and the shared conformance fixtures (protocol/conformance/); see docs/adr/0002 and docs/adr/0004.",
   "type": "object",

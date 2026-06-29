@@ -8,8 +8,12 @@ import {
   ProtocolValidationError,
   UNKNOWN,
   deriveAttributionStatus,
+  dedupeEvents,
+  normalizeRecord,
+  sortEvents,
   validate,
   type AttributionStatus,
+  type ObservationEvent,
 } from "../index.js";
 
 const COST_RE = /^[0-9]+(\.[0-9]+)?$/;
@@ -116,6 +120,146 @@ export function lintLog(text: string): LintReport {
   const byCode: Record<string, number> = {};
   for (const w of warnings) byCode[w.code] = (byCode[w.code] ?? 0) + 1;
   return { total: parsed.length, warnings, byCode };
+}
+
+// --- normalize (arbitrary/legacy record → canonical event) ---
+
+export interface SkippedRecord {
+  lineNo: number;
+  error: string;
+}
+
+export interface NormalizeReport {
+  total: number;
+  events: ObservationEvent[];
+  skipped: SkippedRecord[];
+}
+
+/** Canonicalize every line into a protocol-valid ObservationEvent (reporting un-normalizable ones). */
+export function normalizeLog(text: string): NormalizeReport {
+  const parsed = parseJsonl(text);
+  const events: ObservationEvent[] = [];
+  const skipped: SkippedRecord[] = [];
+  for (const p of parsed) {
+    if (p.parseError !== undefined) {
+      skipped.push({ lineNo: p.lineNo, error: `parse error: ${p.parseError}` });
+      continue;
+    }
+    const res = normalizeRecord(p.value);
+    if (res.event !== undefined) events.push(res.event);
+    else skipped.push({ lineNo: p.lineNo, error: res.error ?? "could not normalize" });
+  }
+  return { total: parsed.length, events, skipped };
+}
+
+// --- replay (deterministic canonical stream) ---
+
+export interface ReplayReport {
+  events: ObservationEvent[];
+  total: number;
+  skipped: number;
+  duplicates: number;
+}
+
+/**
+ * Deterministic replay: normalize → dedupe by event_id → stable sort. Re-running over its own
+ * output is idempotent, demonstrating the protocol's immutable-events / deterministic-replay rule.
+ */
+export function replayLog(text: string): ReplayReport {
+  const norm = normalizeLog(text);
+  const deduped = dedupeEvents(norm.events);
+  return {
+    events: sortEvents(deduped),
+    total: norm.total,
+    skipped: norm.skipped.length,
+    duplicates: norm.events.length - deduped.length,
+  };
+}
+
+// --- diff (field-level comparison of two event logs, keyed by event_id) ---
+
+export interface FieldDiff {
+  path: string;
+  a: unknown;
+  b: unknown;
+}
+
+export interface ChangedEvent {
+  event_id: string;
+  diffs: FieldDiff[];
+}
+
+export interface DiffReport {
+  countA: number;
+  countB: number;
+  onlyInA: string[];
+  onlyInB: string[];
+  changed: ChangedEvent[];
+  equivalent: boolean;
+}
+
+/**
+ * Compare two JSONL event logs field-by-field, keyed by event_id. `ignore` is a list of
+ * dot-paths to skip (e.g. "metadata.sdk") — so cross-SDK parity is a one-liner:
+ * `observe diff py.jsonl ts.jsonl --ignore metadata.sdk`.
+ */
+export function diffLogs(textA: string, textB: string, ignore: string[] = []): DiffReport {
+  const ignoreSet = new Set(ignore);
+  const a = indexByEventId(textA);
+  const b = indexByEventId(textB);
+
+  const onlyInA = [...a.keys()].filter((k) => !b.has(k)).sort();
+  const onlyInB = [...b.keys()].filter((k) => !a.has(k)).sort();
+  const changed: ChangedEvent[] = [];
+
+  for (const [id, recA] of a) {
+    const recB = b.get(id);
+    if (recB === undefined) continue;
+    const diffs = deepDiff(recA, recB, ignoreSet, "");
+    if (diffs.length > 0) changed.push({ event_id: id, diffs });
+  }
+  changed.sort((x, y) => (x.event_id < y.event_id ? -1 : x.event_id > y.event_id ? 1 : 0));
+
+  return {
+    countA: a.size,
+    countB: b.size,
+    onlyInA,
+    onlyInB,
+    changed,
+    equivalent: onlyInA.length === 0 && onlyInB.length === 0 && changed.length === 0,
+  };
+}
+
+function indexByEventId(text: string): Map<string, Record<string, unknown>> {
+  const out = new Map<string, Record<string, unknown>>();
+  let synthetic = 0;
+  for (const p of parseJsonl(text)) {
+    if (p.value === undefined) continue;
+    const id = typeof p.value["event_id"] === "string" && p.value["event_id"] !== "" ? p.value["event_id"] : `:line-${p.lineNo}-${synthetic++}`;
+    out.set(id, p.value);
+  }
+  return out;
+}
+
+function deepDiff(a: unknown, b: unknown, ignore: Set<string>, prefix: string): FieldDiff[] {
+  if (prefix !== "" && ignore.has(prefix)) return [];
+  if (isPlainObject(a) && isPlainObject(b)) {
+    const diffs: FieldDiff[] = [];
+    const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+    for (const k of [...keys].sort()) {
+      const path = prefix === "" ? k : `${prefix}.${k}`;
+      if (ignore.has(path)) continue;
+      diffs.push(...deepDiff(a[k], b[k], ignore, path));
+    }
+    return diffs;
+  }
+  // Arrays and primitives: structural equality via canonical JSON.
+  if (JSON.stringify(a) === JSON.stringify(b)) return [];
+  return [{ path: prefix, a, b }];
+}
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
 // --- stats (attribution + reconciliation report) ---
