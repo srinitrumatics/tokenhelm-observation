@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "observation-sdk"
+version = "0.1.0"
+description = "Producer SDK for the Observation Protocol v1 — emit canonical ObservationEvents for the AI Observation Platform."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Trumatics" }]
+keywords = ["observability", "llm", "tokenhelm", "observationevent", "ai"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Intended Audience :: Developers",
+  "Topic :: System :: Monitoring",
+]
+# Zero runtime dependencies — stdlib only, by design (the SDK stays light and embeddable).
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/srinitrumatics/tokenhelm-observation"
+Protocol = "https://github.com/srinitrumatics/tokenhelm-observation/blob/main/docs/adr/0002-observation-protocol-v1.md"
+
+[tool.setuptools]
+packages = ["observation_sdk"]
