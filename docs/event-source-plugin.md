@@ -12,6 +12,7 @@ All paths below are under `frontend/lib/observation/`.
   helpers `sortEvents`, `dedupeEvents`, and the reference `InMemoryEventSource`.
 - `jsonl-source.ts` — reference implementation #1 (file-based).
 - `db-source.ts` — reference implementation #2 (`DuckDbEventSource`, native driver).
+- `pg-source.ts` — reference implementation #3 (`PostgresEventSource`, SQL driver, v1.4).
 - `source.ts` — `getEventSource()`, the `EVENT_SOURCE` selector.
 - `normalize.ts` — `normalize(record) → ObservationEvent | null`.
 - `replay.ts` — `replay()` / `migrate()` built on the interface.
@@ -104,8 +105,15 @@ migration, and all five reconciliation identities for free.
 
 ## 3. Worked example: `PostgresEventSource`
 
-A hypothetical backend that stores one canonical event per row in a table
-`observation_events(event_id text, timestamp text, doc jsonb)` — exactly mirroring the
+> **Shipped in v1.4** as `lib/observation/pg-source.ts` (ADR 0005). The code below is the
+> guide; the shipped version differs only in small hardening details: an **injectable pool**
+> (so the gate test runs offline against in-memory `pg-mem`, no Docker), a `doc text` column
+> (`JSON.parse`d on read, like DuckDB), a quoted `"timestamp"` identifier, and `undefined_table`
+> detection for the cold-start probe. The lazy-import / register / test / externalize steps are
+> exactly as written here.
+
+A backend that stores one canonical event per row in a table
+`observation_events(event_id text, "timestamp" text, doc text)` — exactly mirroring the
 DuckDB `(event_id, timestamp, doc)` layout, where `doc` is the full canonical JSON.
 
 ### 3a. The skeleton
@@ -292,10 +300,11 @@ bundler edge cases with dynamic `import()`.
 
 ## 4. Testing your source
 
-The test that *proves* the seam is `lib/__tests__/db-source.test.ts`: it ingests the
-shared fixture into the new sink, reads it back, and asserts the event stream is
-**byte-identical** to the JSONL stream and that reconciliation still holds. Copy that
-pattern:
+The tests that *prove* the seam are `lib/__tests__/db-source.test.ts` and (v1.4)
+`lib/__tests__/pg-source.test.ts`: they ingest the shared fixture into the new sink, read it
+back, and assert the event stream is **byte-identical** to the JSONL stream and that all five
+reconciliation identities still hold. The Postgres test uses **`pg-mem`** (an in-memory Postgres)
+so it runs offline with no Docker/server — copy that pattern:
 
 ```ts
 // lib/__tests__/pg-source.test.ts

@@ -2,6 +2,24 @@
 
 All notable changes to the AI Observability Platform (TokenHelm Analytics).
 
+## [Unreleased] — v1.4 (branch `feat/postgres-eventsource`)
+
+### Added
+- **PostgreSQL EventSource** (`frontend/lib/observation/pg-source.ts`,
+  [ADR 0005](docs/adr/0005-postgres-eventsource.md)) — the first **connector-ecosystem** storage
+  backend, selected via `EVENT_SOURCE=postgres` + `PG_DSN`. Mirrors `DuckDbEventSource` exactly
+  (`observation_events(event_id, "timestamp", doc)`, full canonical JSON per row; the same
+  `normalize` → dedupe → sort read path), so analytics are byte-identical across sinks. The `pg`
+  driver is lazy-loaded and externalized in `next.config.ts`; read path is strictly read-only;
+  writing is the separate `ingestJsonlToPostgres()` / `scripts/ingest-postgres.mjs`.
+- Storage-backend gate `frontend/lib/__tests__/pg-source.test.ts` — proves `JSON.stringify(pg) ===
+  JSON.stringify(jsonl)` and **all five reconciliation identities** over the Postgres sink. Runs
+  **offline** via in-memory `pg-mem` (no Docker/server). Frontend suite 125 → 129. No new CI job.
+
+### Changed
+- `docs/event-source-plugin.md` — `PostgresEventSource` promoted from worked example to shipped
+  reference implementation #3. `.env.local.example` documents `duckdb`/`postgres` selectors.
+
 ## [Unreleased] — v1.3 (branch `feat/protocol-conformance-kit`)
 
 ### Added
