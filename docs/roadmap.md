@@ -65,10 +65,14 @@ New `EventSource` implementations **without changing analytics** — each must d
 identical analytics against the reference JSONL fixtures (the gate in `CONTRIBUTING.md`). See
 [`docs/event-source-plugin.md`](event-source-plugin.md).
 
-- PostgreSQL
+- PostgreSQL — **shipped** (v1.4, ADR 0005): `EVENT_SOURCE=postgres`, `pg-source.ts`, byte-identical
+  analytics proven offline via `pg-mem`.
 - Redis Streams
 - Kafka
 - OpenTelemetry bridge
+
+**Status:** Connector ecosystem started. The shipped Postgres source is the template (mirror
+DuckDB, inject a pool, prove byte-identical analytics with an in-memory engine) for the rest.
 
 Analytics consumers (Prometheus, Grafana, Opik, Langfuse) read the same immutable stream —
 never a competing source of truth.
