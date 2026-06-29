@@ -2,7 +2,34 @@
 
 All notable changes to the AI Observability Platform (TokenHelm Analytics).
 
-## [Unreleased] — v1.1 (branch `feat/observation-sdk-python`)
+## [Unreleased] — v1.2 (branch `feat/observation-sdk-typescript`)
+
+### Added
+- **Observation SDK (TypeScript / Node)** under `sdk/typescript/`
+  ([ADR 0003](docs/adr/0003-typescript-observation-sdk.md)) — a standalone, dependency-free
+  producer SDK targeting **protocol parity** with the Python SDK: `ObservationClient`,
+  `ObservationContext`, `ObservationEventBuilder`, `ObservationEmitter`, transports
+  (JSONL / in-memory / HTTP), **`AsyncLocalStorage`-based** attribution propagation, and
+  protocol validation before transport. The API is idiomatic for Node (callback scopes), not a
+  transliteration of Python.
+- Cross-**language** parity gate `frontend/lib/__tests__/sdk-parity.test.ts` — the Python- and
+  TypeScript-emitted fixtures are field-for-field identical except `metadata.sdk`, and the
+  platform produces identical analytics from both (5 reconciliation identities, global
+  `0.017` / `1560`). New SDK Vitest suite (24 tests); platform suite now 125 tests.
+- CI gains a stable `typescript-sdk` job, added to the `gates` aggregate (existing job names
+  unchanged, so branch protection stays valid).
+
+### Unchanged (compatibility preserved)
+- No `ObservationEvent`/`EventSource` changes — a new producer only, additive within `v1.x`.
+
+## v1.1.1 — CI enforcement (merged)
+
+### Added
+- **GitHub Actions CI** (`.github/workflows/ci.yml`) enforcing the governance release gates on
+  every PR and push to `main`: `python-sdk`, `frontend`, `platform-verification`, aggregated by
+  a stable `gates` check (the one to require in branch protection).
+
+## v1.1 — Observation SDK (Python) (merged)
 
 ### Added
 - **Observation Protocol v1** ([ADR 0002](docs/adr/0002-observation-protocol-v1.md)) — the
