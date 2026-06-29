@@ -1,0 +1,4 @@
+google-adk==2.3.0
+python-dotenv>=1.0
+tokenhelm==0.1.0rc1
+tokenhelm-prompt==0.2.0

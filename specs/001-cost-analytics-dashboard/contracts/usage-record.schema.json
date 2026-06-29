@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trumatics.local/contracts/usage-record.schema.json",
+  "title": "UsageRecord",
+  "description": "One line of usage_log.jsonl — a single tracked model call. Read-only contract consumed by the Cost Analytics Dashboard; produced by CostTrackingPlugin in the ADK demos.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "provider",
+    "model",
+    "input_tokens",
+    "output_tokens",
+    "total_tokens",
+    "cost",
+    "timestamp",
+    "priced",
+    "currency"
+  ],
+  "properties": {
+    "provider": { "type": "string", "minLength": 1, "examples": ["gemini"] },
+    "model": { "type": "string", "minLength": 1, "examples": ["gemini-3-flash-preview"] },
+    "input_tokens": { "type": "integer", "minimum": 0 },
+    "output_tokens": { "type": "integer", "minimum": 0 },
+    "total_tokens": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Stored as recorded; MAY exceed input_tokens + output_tokens because upstream folds reasoning/thinking tokens into the total. Never recomputed."
+    },
+    "latency": { "type": "number", "minimum": 0 },
+    "cost": {
+      "type": "string",
+      "pattern": "^[0-9]+(\\.[0-9]+)?$",
+      "description": "Monetary cost as a variable-precision decimal string. MUST be aggregated with decimal arithmetic, never IEEE-754 float.",
+      "examples": ["0.000800", "0.0002410"]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of the call."
+    },
+    "usage_complete": { "type": "boolean" },
+    "priced": {
+      "type": "boolean",
+      "description": "If false, the record is excluded from cost totals but its tokens and call count are still counted."
+    },
+    "currency": { "type": "string", "minLength": 1, "examples": ["USD"] },
+    "agent": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Name of the ADK agent that produced the call (coordinator, a delegated sub-agent, or a pipeline stage). OPTIONAL: records written before agent attribution lack it; consumers treat a missing value as \"unknown\".",
+      "examples": ["coordinator", "weather_assistant", "sales_agent"]
+    }
+  }
+}

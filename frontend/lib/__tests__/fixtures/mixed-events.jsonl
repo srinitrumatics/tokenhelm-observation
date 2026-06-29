@@ -1,0 +1,6 @@
+{"event_id":"m1","timestamp":"2026-06-20T10:00:00+00:00","provider":"gemini","model":"gemini-3-flash-preview","request_id":"r1","session_id":"s1","agent":"weather","prompt":"weather","input_tokens":100,"output_tokens":20,"total_tokens":120,"latency_ms":250,"cost":"0.0010","currency":"USD","status":"success","attribution_status":"complete","metadata":{"priced":true}}
+this is not json
+{"event_id":"m1","timestamp":"2026-06-20T10:00:00+00:00","provider":"gemini","model":"gemini-3-flash-preview","request_id":"r1","session_id":"s1","agent":"weather","prompt":"weather","input_tokens":100,"output_tokens":20,"total_tokens":120,"latency_ms":250,"cost":"0.0010","currency":"USD","status":"success","attribution_status":"complete","metadata":{"priced":true}}
+
+{"timestamp":"2026-06-20T10:05:00+00:00","provider":"gemini","input_tokens":5,"output_tokens":5,"total_tokens":10,"cost":"0.0001","currency":"USD"}
+{"event_id":"m2","timestamp":"2026-06-20T11:00:00+00:00","provider":"gemini","model":"gemini-3-flash-preview","request_id":"r2","session_id":"s1","agent":"coordinator","prompt":"coordinator","input_tokens":150,"output_tokens":30,"total_tokens":180,"latency_ms":400,"cost":"0.0020","currency":"USD","status":"success","attribution_status":"complete","metadata":{"priced":true}}

@@ -1,0 +1,15 @@
+# Project pricing overrides for tokenhelm (USD per 1,000,000 tokens).
+# Layered ON TOP of tokenhelm's bundled rates — entries here win by (provider, model) key.
+#
+# NOTE: Gemini 3 preview prices below are PLACEHOLDER ESTIMATES so cost tracking
+# produces a non-zero number. Replace them with the official rates from
+# https://ai.google.dev/gemini-api/docs/pricing before trusting the dollar figures.
+# Any model NOT listed here (or in the bundled file) is still tracked for tokens,
+# just reported as priced=false with cost 0.
+
+gemini:
+  gemini-3-flash-preview: { input: 0.50, output: 2.50 }   # ESTIMATE — update with official price
+  gemini-3-pro-preview:   { input: 2.50, output: 15.00 }  # ESTIMATE — update with official price
+  # bundled defaults kept for reference / fallback:
+  gemini-2.5-flash: { input: 0.30, output: 2.50 }
+  gemini-2.5-pro:   { input: 1.25, output: 10.00 }

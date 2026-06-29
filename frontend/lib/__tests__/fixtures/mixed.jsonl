@@ -1,0 +1,7 @@
+{"provider": "gemini", "model": "gemini-3-flash-preview", "input_tokens": 100, "output_tokens": 20, "total_tokens": 120, "latency": 0.0, "cost": "0.000100", "timestamp": "2026-06-26T10:00:00+00:00", "usage_complete": true, "priced": true, "currency": "USD"}
+this is not json
+{"provider": "gemini", "model": "gemini-3-flash-preview", "input_tokens": 200, "output_tokens": 40, "total_tokens": 240, "latency": 0.0, "cost": "0.000200", "timestamp": "2026-06-26T11:00:00+00:00", "usage_complete": true, "priced": true, "currency": "USD"}
+{"provider": "", "model": "missing-provider", "input_tokens": 10, "output_tokens": 1, "total_tokens": 11, "cost": "0.000001", "timestamp": "2026-06-26T12:00:00+00:00", "priced": true, "currency": "USD"}
+{"provider": "gemini", "model": "bad-cost", "input_tokens": 10, "output_tokens": 1, "total_tokens": 11, "cost": "not-a-number", "timestamp": "2026-06-26T12:30:00+00:00", "priced": true, "currency": "USD"}
+
+{"provider": "gemini", "model": "gemini-3-flash-preview", "input_tokens": 300, "output_tokens": 60, "total_tokens": 360, "latency": 0.0, "cost": "0.000300", "timestamp": "2026-06-26T13:00:00+00:00", "usage_complete": true, "priced": true, "currency": "USD"}
