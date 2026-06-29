@@ -25,3 +25,4 @@ UI tweaks, docs, new dashboard views over existing analytics) does not.
 | [0002](0002-observation-protocol-v1.md) | Observation Protocol v1 | Accepted |
 | [0003](0003-typescript-observation-sdk.md) | TypeScript/Node Observation SDK (protocol parity) | Accepted |
 | [0004](0004-protocol-conformance-kit.md) | Observation Protocol Conformance Kit + `observe` CLI | Accepted |
+| [0005](0005-postgres-eventsource.md) | PostgreSQL EventSource (connector ecosystem begins) | Accepted |

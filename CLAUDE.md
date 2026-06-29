@@ -136,10 +136,13 @@ dashboard intact (`/api/usage` + `lib/aggregate.ts` are untouched). Key addition
   mutates `ObservationEvent`s; ids are deterministic and timestamps are data-derived, so replay
   reproduces identical recs/alerts.
 - **Storage selector:** every API route reads through `getEventSource()` (`lib/observation/source.ts`),
-  chosen by `EVENT_SOURCE` (`jsonl` default | `duckdb`). `DuckDbEventSource` (`lib/observation/db-source.ts`)
-  is the scale path behind the same interface; the native `@duckdb/node-api` is externalized in
-  `next.config.ts` and only loaded when selected. Ingest: `scripts/ingest-duckdb.mjs`; benchmark:
-  `scripts/bench.mjs` (honest numbers: JSONL full-parse ~22s/10M, DuckDB SQL GROUP BY ~5.7s/10M).
+  chosen by `EVENT_SOURCE` (`jsonl` default | `duckdb` | `postgres`). `DuckDbEventSource`
+  (`lib/observation/db-source.ts`) is the scale path; `PostgresEventSource` (`lib/observation/pg-source.ts`,
+  v1.4/ADR 0005) is the first connector — both behind the same interface, each driver lazy-loaded and
+  externalized in `next.config.ts`, only loaded when selected. Ingest: `scripts/ingest-duckdb.mjs` /
+  `scripts/ingest-postgres.mjs`; benchmark: `scripts/bench.mjs` (honest numbers: JSONL full-parse
+  ~22s/10M, DuckDB SQL GROUP BY ~5.7s/10M). Each new backend must prove byte-identical analytics vs
+  the JSONL fixtures (`pg-source.test.ts` uses in-memory `pg-mem`, fully offline).
 - **End-to-end demo:** `demo/run_demo_e2e.py` drives the **real** pipeline offline to emit a
   multi-agent trace to `demo/demo_usage_log.jsonl` (point the dashboard at it via `USAGE_LOG_PATH`).
 - **Docs:** `docs/adr/0001-core-architecture.md` (the v1.0 ADR — the canonical record of the five
