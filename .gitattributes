@@ -1,0 +1,7 @@
+# Normalize line endings to LF in the repo for cross-platform consistency.
+* text=auto eol=lf
+
+# Binary / data files — leave untouched.
+*.png binary
+*.jpg binary
+*.duckdb binary

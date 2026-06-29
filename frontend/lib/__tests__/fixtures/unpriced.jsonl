@@ -1,0 +1,3 @@
+{"provider": "gemini", "model": "gemini-3-flash-preview", "input_tokens": 100, "output_tokens": 20, "total_tokens": 120, "latency": 0.0, "cost": "0.000100", "timestamp": "2026-06-26T10:00:00+00:00", "usage_complete": true, "priced": true, "currency": "USD"}
+{"provider": "openai", "model": "some-unpriced-model", "input_tokens": 200, "output_tokens": 50, "total_tokens": 250, "latency": 0.0, "cost": "0", "timestamp": "2026-06-26T11:00:00+00:00", "usage_complete": true, "priced": false, "currency": "USD"}
+{"provider": "anthropic", "model": "claude-x", "input_tokens": 300, "output_tokens": 60, "total_tokens": 360, "latency": 0.0, "cost": "0.50", "timestamp": "2026-06-26T12:00:00+00:00", "usage_complete": true, "priced": true, "currency": "EUR"}

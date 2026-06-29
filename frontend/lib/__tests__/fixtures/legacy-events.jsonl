@@ -1,0 +1,2 @@
+{"provider":"gemini","model":"gemini-3-flash-preview","input_tokens":1200,"output_tokens":80,"total_tokens":1280,"latency":0.0,"cost":"0.000800","timestamp":"2026-06-19T14:07:59.900565+00:00","usage_complete":true,"priced":true,"currency":"USD","agent":"weather_assistant"}
+{"provider":"gemini","model":"gemini-3-flash-preview","input_tokens":1500,"output_tokens":140,"total_tokens":1640,"latency":0.0,"cost":"0.001100","timestamp":"2026-06-19T14:07:59.901165+00:00","usage_complete":true,"priced":true,"currency":"USD"}
