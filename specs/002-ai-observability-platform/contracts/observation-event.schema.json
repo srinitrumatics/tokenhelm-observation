@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://trumatics.local/contracts/observation-event.schema.json",
   "title": "ObservationEvent",
-  "description": "Canonical, immutable, normalized record of one model invocation. The single contract every analytics module consumes; storage sinks (JSONL, DB, etc.) serialize and yield this shape via the EventSource interface.",
+  "description": "Canonical, immutable record of one model invocation — Observation Protocol v1. The single contract every producer emits and every analytics module consumes; storage sinks (JSONL, DB, etc.) serialize and yield this shape via the EventSource interface. This schema is kept in lockstep with the SDK validators and the shared conformance fixtures (protocol/conformance/); see docs/adr/0002 and docs/adr/0004.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -22,7 +22,7 @@
     "currency",
     "status",
     "attribution_status",
-    "raw"
+    "metadata"
   ],
   "properties": {
     "event_id": {
@@ -135,12 +135,16 @@
     },
     "metadata": {
       "type": "object",
-      "description": "Open key/value bag carried through uninterpreted (e.g. unpriced flag, sink-specific fields).",
+      "description": "Open key/value bag carried through uninterpreted (sink-specific fields, protocol_version, sdk, …). MUST carry a boolean `priced` flag: false ⇒ tokens counted but cost contributes 0.",
+      "required": ["priced"],
+      "properties": {
+        "priced": { "type": "boolean" }
+      },
       "additionalProperties": true
     },
     "raw": {
-      "type": "object",
-      "description": "Original unmodified source record, preserved for the JSON inspector and replay.",
+      "type": ["object", "null"],
+      "description": "Optional original unmodified source record, preserved for the JSON inspector and replay. Defaults to {} when a producer has no upstream record; the platform always populates it.",
       "additionalProperties": true
     }
   }

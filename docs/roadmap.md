@@ -54,6 +54,11 @@ contract between producers and consumers. Include:
 - Anchored to `frontend/lib/observation/event.ts` and
   `specs/002-ai-observability-platform/contracts/observation-event.schema.json`
 
+**Status:** Protocol v1 formalized (ADR 0002). **Conformance kit + `observe` CLI** shipped
+(`protocol/conformance/`, ADR 0004) — language-neutral fixtures both SDK validators must agree
+on, plus a producer-facing CLI to validate/lint/reconcile any JSONL log. JSON Schema aligned to
+the validators.
+
 ### Epic 3 — Connector ecosystem
 
 New `EventSource` implementations **without changing analytics** — each must demonstrate

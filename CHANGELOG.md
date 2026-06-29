@@ -2,6 +2,25 @@
 
 All notable changes to the AI Observability Platform (TokenHelm Analytics).
 
+## [Unreleased] — v1.3 (branch `feat/protocol-conformance-kit`)
+
+### Added
+- **Observation Protocol Conformance Kit** (`protocol/conformance/`, [ADR 0004](docs/adr/0004-protocol-conformance-kit.md))
+  — language-neutral canonical fixtures (`valid/` + `invalid/` + `manifest.json`) that **every**
+  protocol validator must agree on. Both SDK suites load the same manifest
+  (`sdk/python/tests/test_conformance.py`, `sdk/typescript/tests/conformance.test.ts`), so a
+  validator divergence is a CI failure — no new CI job (runs in the existing `python-sdk` /
+  `typescript-sdk` gates). Python suite 22 → 42; TS suite 24 → 53.
+- **`observe` CLI** — shipped as the `observe` bin of `@tokenhelm/observation-sdk`, reusing the
+  SDK's `validate()`: `observe validate` (protocol-validate a JSONL log; exit 1 on violation),
+  `observe lint` (non-fatal warnings), `observe stats` (attribution breakdown + decimal-exact,
+  BigInt-based cost/token reconciliation). `--json` for machine output.
+
+### Changed (drift fix, compatibility preserved)
+- `specs/.../contracts/observation-event.schema.json` aligned to the SDK validators: `raw`
+  optional (defaults `{}`), `metadata` required with a boolean `priced`. No event shape changes —
+  the schema now describes the validators faithfully (the SDKs already enforced this).
+
 ## [Unreleased] — v1.2 (branch `feat/observation-sdk-typescript`)
 
 ### Added
