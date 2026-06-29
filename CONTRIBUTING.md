@@ -46,17 +46,26 @@ routine enhancement — open an ADR and a compatibility review before writing co
 determinism, the reconciliation gate, or how analytics are derived. Bug fixes, UI tweaks,
 docs, and new dashboard views over existing analytics do **not** need an ADR.
 
-## Release gates (must be green before merge)
+## Release gates (enforced by CI)
 
-All offline, no API key:
+These gates are **enforced automatically by CI** (`.github/workflows/ci.yml`) on every pull
+request and every push to `main` — they are no longer just local recommendations. Once branch
+protection is enabled, the `gates` check (and/or the three job checks below) is **required**,
+so a PR cannot merge unless every gate is green.
+
+| CI job | Gate |
+|--------|------|
+| `python-sdk` | `pip install -e "./sdk/python[test]"` → `pytest` (protocol validation + SDK reconciliation) |
+| `frontend` | `npm ci` → `npm test` (incl. `reconcile.test.ts` + `sdk-events.test.ts`) → `npm run typecheck` → `npm run build` |
+| `platform-verification` | `pip install -r requirements.txt` → `python verify_tracking.py` (5-point canonical validation) |
+| `gates` | Aggregate — succeeds only if the three above succeed (the stable check to require in branch protection) |
+
+Run them locally before pushing (all offline, no API key):
 
 ```bash
-cd frontend
-npm test          # Vitest incl. the reconciliation gate (lib/__tests__/reconcile.test.ts)
-npm run typecheck
-npm run build
-cd ..
-.venv/Scripts/python.exe verify_tracking.py   # 5-point canonical pipeline validation
+cd sdk/python && pytest -q && cd ../..
+cd frontend && npm ci && npm test && npm run typecheck && npm run build && cd ..
+.venv/Scripts/python.exe verify_tracking.py
 ```
 
 The reconciliation gate is non-negotiable: **the dashboard totals must equal the events,
