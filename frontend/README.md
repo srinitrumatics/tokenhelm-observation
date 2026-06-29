@@ -100,6 +100,8 @@ The pure `lib/` parser/analytics are unit-tested offline with no API key or netw
 
 ## Docs
 
+- `../CONTRIBUTING.md` — governance process, v1.x compatibility commitments, contribution gate
+- `../docs/roadmap.md` — v1.1 epics (SDK, protocol, connectors, tooling)
 - `../docs/adr/0001-core-architecture.md` — **ADR**: the five validated architectural decisions (start here)
 - `../docs/architecture.md` — system architecture & the five locked constraints
 - `../docs/api.md` — REST API reference (all endpoints)
