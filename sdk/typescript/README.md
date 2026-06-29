@@ -93,12 +93,37 @@ Every event is validated against Observation Protocol v1 **before** transport
 - `attribution_status` is derived deterministically (`complete` / `partial` / `missing`).
 - No dependency on the platform — depends only on the protocol.
 
+## `observe` CLI — protocol conformance
+
+Installing the package puts an `observe` binary on your PATH (or run via `npx observe`). It
+validates/lints/summarizes a JSONL event log against **Observation Protocol v1** — usable by any
+producer in CI, regardless of how the events were generated. It reuses the SDK's `validate()`, so
+it agrees with the shared conformance fixtures (`protocol/conformance/`) by construction.
+
+```bash
+observe validate usage_log.jsonl    # protocol-validate every line; exit 1 on any violation
+observe lint usage_log.jsonl        # non-fatal warnings (attribution gaps, unpriced, …)
+observe stats usage_log.jsonl       # attribution breakdown + decimal-exact reconciliation
+observe <cmd> file.jsonl --json     # machine-readable report
+```
+
+`observe stats` example (decimal-exact, no float drift):
+
+```
+events: 7
+global: cost=0.0170 tokens=1560 priced=7 unpriced=0
+attribution: complete=6 partial=0 missing=1
+by provider:
+  gemini: cost=0.0135 tokens=1230 calls=5
+  openai: cost=0.0035 tokens=330 calls=2
+```
+
 ## Tests
 
 ```bash
 cd sdk/typescript
 npm ci
-npm test          # protocol / context / transport / reconciliation (+ fixture drift guard)
+npm test          # protocol / context / transport / reconciliation / conformance / cli
 npm run typecheck
 npm run build
 # regenerate the cross-stack fixture after changing the SDK:

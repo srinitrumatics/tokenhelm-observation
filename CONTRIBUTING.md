@@ -41,6 +41,7 @@ routine enhancement — open an ADR and a compatibility review before writing co
 | Changes touching **`ObservationEvent`** or **`EventSource`** | An ADR **+ compatibility review** against the commitments above |
 | A new **analytics module** (`lib/analytics/*`) | **Reconciliation tests** — its totals must reconcile to the global totals (extend `lib/__tests__/reconcile.test.ts`) |
 | A new **storage backend** (`EventSource` impl) | A test proving **identical analytics** vs the reference JSONL fixtures (mirror `lib/__tests__/db-source.test.ts`: `JSON.stringify` equality + reconciliation) |
+| A change to a **protocol validation rule** | A new case in `protocol/conformance/` (valid or invalid) **first** — every SDK validator must agree on it (`test_conformance.py` + `conformance.test.ts`); validate logs with `observe validate` |
 
 "Architectural change" = anything affecting the protocol, the storage seam, replay
 determinism, the reconciliation gate, or how analytics are derived. Bug fixes, UI tweaks,
