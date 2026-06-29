@@ -56,14 +56,16 @@ so a PR cannot merge unless every gate is green.
 | CI job | Gate |
 |--------|------|
 | `python-sdk` | `pip install -e "./sdk/python[test]"` → `pytest` (protocol validation + SDK reconciliation) |
-| `frontend` | `npm ci` → `npm test` (incl. `reconcile.test.ts` + `sdk-events.test.ts`) → `npm run typecheck` → `npm run build` |
+| `typescript-sdk` | `npm ci` → `npm test` (protocol / context / transport / reconciliation + fixture drift guard) → `npm run typecheck` → `npm run build` |
+| `frontend` | `npm ci` → `npm test` (incl. `reconcile.test.ts`, `sdk-events.test.ts`, `sdk-parity.test.ts`) → `npm run typecheck` → `npm run build` |
 | `platform-verification` | `pip install -r requirements.txt` → `python verify_tracking.py` (5-point canonical validation) |
-| `gates` | Aggregate — succeeds only if the three above succeed (the stable check to require in branch protection) |
+| `gates` | Aggregate — succeeds only if the four above succeed (the stable check to require in branch protection) |
 
 Run them locally before pushing (all offline, no API key):
 
 ```bash
 cd sdk/python && pytest -q && cd ../..
+cd sdk/typescript && npm ci && npm test && npm run typecheck && npm run build && cd ../..
 cd frontend && npm ci && npm test && npm run typecheck && npm run build && cd ..
 .venv/Scripts/python.exe verify_tracking.py
 ```
