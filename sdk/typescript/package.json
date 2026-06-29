@@ -13,6 +13,9 @@
       "import": "./dist/src/index.js"
     }
   },
+  "bin": {
+    "observe": "./dist/src/cli/observe.js"
+  },
   "files": [
     "dist/src",
     "README.md"
@@ -32,6 +35,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "build": "tsc",
+    "prepare": "tsc",
     "gen:fixture": "npm run build && node dist/examples/generateFixture.js"
   },
   "dependencies": {},
