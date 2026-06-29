@@ -1,0 +1,94 @@
+name: CI
+
+# Enforces the governance release gates from CONTRIBUTING.md on every PR and every push
+# to main. The same gates we run locally — now automated so future contributions cannot
+# bypass reconciliation or protocol validation once these are required status checks.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Least privilege: CI only needs to read the repo.
+permissions:
+  contents: read
+
+# Cancel superseded runs on the same ref for fast feedback.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Gate 1 — Observation SDK (Python). Dependency-free + pytest; runs anywhere.
+  python-sdk:
+    name: python-sdk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install SDK with test extras
+        run: python -m pip install --upgrade pip && pip install -e "./sdk/python[test]"
+      - name: pytest
+        working-directory: sdk/python
+        run: pytest -q
+
+  # Gate 2 — Frontend / Platform. Reconciliation gate lives in `npm test`.
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install (clean, lockfile-exact)
+        run: npm ci
+      - name: Unit tests (incl. reconciliation + cross-stack SDK fixture)
+        run: npm test
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Production build
+        run: npm run build
+
+  # Gate 3 — Canonical offline verification of the cost-tracking pipeline.
+  # Requires the platform runtime deps (google-adk, tokenhelm, tokenhelm-prompt) to be
+  # installable on the runner. Set PIP_EXTRA_INDEX_URL (repo/org variable) if any are
+  # served from a private index.
+  platform-verification:
+    name: platform-verification
+    runs-on: ubuntu-latest
+    env:
+      PIP_EXTRA_INDEX_URL: ${{ vars.PIP_EXTRA_INDEX_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install platform requirements
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - name: verify_tracking.py (5-point canonical validation)
+        run: python verify_tracking.py
+
+  # Aggregate gate — the single stable check to require in branch protection. Its name and
+  # the three job names above are stable, so they can be made required without edits later.
+  gates:
+    name: gates
+    runs-on: ubuntu-latest
+    needs: [python-sdk, frontend, platform-verification]
+    if: always()
+    steps:
+      - name: Confirm all gates passed
+        run: |
+          echo "python-sdk            = ${{ needs.python-sdk.result }}"
+          echo "frontend              = ${{ needs.frontend.result }}"
+          echo "platform-verification = ${{ needs.platform-verification.result }}"
+          test "${{ needs.python-sdk.result }}" = "success" \
+            && test "${{ needs.frontend.result }}" = "success" \
+            && test "${{ needs.platform-verification.result }}" = "success"
